@@ -13,23 +13,24 @@ function App() {
 
   const API_URL = "https://expense-tracker-fullstack-1-ikle.onrender.com/api/expenses/";
 
-  // ✅ Fetch expenses
-  const fetchExpenses = async () => {
-    try {
-      const res = await axios.get(API_URL, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setExpenses(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // ✅ useEffect FIXED
+  // ✅ fetchExpenses INSIDE useEffect → no dependency warning
   useEffect(() => {
-    if (token) fetchExpenses();
+    const fetchExpenses = async () => {
+      if (!token) return;
+
+      try {
+        const res = await axios.get(API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setExpenses(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchExpenses();
   }, [token]);
 
   // ✅ Add expense
@@ -44,7 +45,15 @@ function App() {
           },
         }
       );
-      fetchExpenses();
+
+      // refetch
+      const res = await axios.get(API_URL, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setExpenses(res.data);
+
       setTitle("");
       setAmount("");
       setDate("");
@@ -59,7 +68,7 @@ function App() {
     setToken(null);
   };
 
-  // ❌ If not logged in → show login page
+  // ✅ Login screen
   if (!token) {
     return <Login setToken={setToken} />;
   }
