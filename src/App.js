@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_URL = "const API_URL = "https://expense-tracker-fullstack-1-ikle.onrender.com/api"
+const API_URL = "const API_URL = "https://expense-tracker-fullstack-1-ikle.onrender.com/api/token/";
 
 function App() {
   const [expenses, setExpenses] = useState([]);
@@ -33,7 +33,7 @@ function App() {
   const handleLogin = async () => {
     try {
       const res = await axios.post(
-        "https://expense-tracker-fullstack-1-ikle.onrender.com/api/token/",
+        "https://expense-tracker-fullstack-1-ikle.onrender.com/api/token/"
         {
           username: title,
           password: amount,
