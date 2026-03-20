@@ -1,44 +1,70 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import ExpenseChart from "./components/ExpenseChart";
-import Login from "./Login";
+import "./App.css";
+
+const API_URL = "const API_URL = "https://expense-tracker-fullstack-1-ikle.onrender.com/api"
 
 function App() {
   const [expenses, setExpenses] = useState([]);
-  const [token, setToken] = useState(localStorage.getItem("token"));
-
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState("");
+  const [category, setCategory] = useState("");
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
-  const API_URL = "https://expense-tracker-fullstack-1-ikle.onrender.com/api/expenses/";
+  // 🔥 Fetch expenses
+  const fetchExpenses = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/expenses/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setExpenses(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-  // ✅ fetchExpenses INSIDE useEffect → no dependency warning
   useEffect(() => {
-    const fetchExpenses = async () => {
-      if (!token) return;
-
-      try {
-        const res = await axios.get(API_URL, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setExpenses(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchExpenses();
+    if (token) fetchExpenses();
   }, [token]);
 
-  // ✅ Add expense
-  const addExpense = async () => {
+  // 🔥 Login
+  const handleLogin = async () => {
+    try {
+      const res = await axios.post(
+        "https://expense-tracker-fullstack-1-ikle.onrender.com/api/token/",
+        {
+          username: title,
+          password: amount,
+        }
+      );
+
+      localStorage.setItem("token", res.data.access);
+      setToken(res.data.access);
+
+      alert("Login successful!");
+    } catch (err) {
+      alert("Invalid credentials");
+    }
+  };
+
+  // 🔥 Logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+  };
+
+  // 🔥 Add Expense
+  const handleAddExpense = async () => {
     try {
       await axios.post(
-        API_URL,
-        { title, amount: Number(amount), date },
+        `${API_URL}/expenses/`,
+        {
+          title,
+          amount,
+          category,
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -46,68 +72,151 @@ function App() {
         }
       );
 
-      // refetch
-      const res = await axios.get(API_URL, {
+      setTitle("");
+      setAmount("");
+      setCategory("");
+      fetchExpenses();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // 🔥 DELETE Expense
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/expenses/${id}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setExpenses(res.data);
 
-      setTitle("");
-      setAmount("");
-      setDate("");
+      fetchExpenses();
     } catch (err) {
-      console.error(err);
+      console.log(err);
     }
   };
 
-  // ✅ Logout
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
+  // 🔥 EDIT Expense
+  const handleEdit = async (expense) => {
+    const newTitle = prompt("Edit title:", expense.title);
+    const newAmount = prompt("Edit amount:", expense.amount);
+    const newCategory = prompt("Edit category:", expense.category);
+
+    if (!newTitle || !newAmount || !newCategory) return;
+
+    try {
+      await axios.put(
+        `${API_URL}/expenses/${expense.id}/`,
+        {
+          title: newTitle,
+          amount: newAmount,
+          category: newCategory,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      fetchExpenses();
+    } catch (err) {
+      console.log(err);
+    }
   };
 
-  // ✅ Login screen
+  // 🔥 LOGIN UI
   if (!token) {
-    return <Login setToken={setToken} />;
+    return (
+      <div className="container">
+        <h1>🔐 Login</h1>
+
+        <input
+          placeholder="Username"
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e) => setAmount(e.target.value)}
+        />
+
+        <button className="add-btn" onClick={handleLogin}>
+          Login
+        </button>
+      </div>
+    );
   }
 
+  // 🔥 MAIN DASHBOARD
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>Expense Dashboard</h1>
+    <div className="container">
+      <h1>💰 Expense Dashboard</h1>
 
-      <button onClick={logout}>Logout</button>
+      <button className="logout-btn" onClick={handleLogout}>
+        Logout
+      </button>
 
-      {/* Add Expense */}
-      <div style={{ marginTop: "20px" }}>
+      {/* ADD EXPENSE */}
+      <div className="card">
+        <h3>Add Expense</h3>
+
         <input
           placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+
         <input
           placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
+
         <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
+          placeholder="Category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
         />
-        <button onClick={addExpense}>Add Expense</button>
+
+        <button className="add-btn" onClick={handleAddExpense}>
+          Add
+        </button>
       </div>
 
-      {/* Chart */}
-      <ExpenseChart expenses={expenses} />
+      {/* EXPENSE LIST */}
+      <div className="card">
+        <h3>Expenses</h3>
 
-      {/* List */}
-      {expenses.map((e) => (
-        <div key={e.id} style={{ marginTop: "10px" }}>
-          <strong>{e.title}</strong> - ₹{e.amount}
-        </div>
-      ))}
+        {expenses.length === 0 ? (
+          <p>No expenses yet</p>
+        ) : (
+          expenses.map((exp) => (
+            <div key={exp.id} className="expense-item">
+              <span>
+                {exp.title} - ₹{exp.amount} ({exp.category})
+              </span>
+
+              <div>
+                <button
+                  className="edit-btn"
+                  onClick={() => handleEdit(exp)}
+                >
+                  Edit
+                </button>
+
+                <button
+                  className="delete-btn"
+                  onClick={() => handleDelete(exp.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
