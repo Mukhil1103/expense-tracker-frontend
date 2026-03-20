@@ -2,52 +2,51 @@ import React, { useState } from "react";
 import axios from "axios";
 
 function Login({ setToken }) {
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const loginUser = async () => {
+  const handleLogin = async () => {
     try {
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/token/",
+        "https://expense-tracker-fullstack-1-ikle.onrender.com/api/token/",
         {
-          username,
-          password
+          username: username,
+          password: password,
         }
       );
 
-      const token = res.data.access;
-
-      localStorage.setItem("token", token);
-      setToken(token);
+      // ✅ SAVE TOKEN
+      localStorage.setItem("token", res.data.access);
+      setToken(res.data.access);
 
     } catch (err) {
+      console.error(err.response?.data);
       alert("Invalid credentials");
     }
   };
 
   return (
-    <div style={{ padding: "40px", textAlign: "center" }}>
-
+    <div style={{ padding: "40px" }}>
       <h2>Login</h2>
 
       <input
         placeholder="Username"
+        value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
 
-      <br /><br />
+      <br />
 
       <input
         type="password"
         placeholder="Password"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      <br /><br />
+      <br />
 
-      <button onClick={loginUser}>Login</button>
-
+      <button onClick={handleLogin}>Login</button>
     </div>
   );
 }
