@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_URL = "const API_URL = "https://expense-tracker-fullstack-1-ikle.onrender.com/api/token/";
+// ✅ CORRECT BASE URL
+const API_URL = "https://expense-tracker-fullstack-1-ikle.onrender.com/api";
 
 function App() {
   const [expenses, setExpenses] = useState([]);
@@ -33,7 +34,7 @@ function App() {
   const handleLogin = async () => {
     try {
       const res = await axios.post(
-        "https://expense-tracker-fullstack-1-ikle.onrender.com/api/token/"
+        `${API_URL}/token/`,   // ✅ FIXED
         {
           username: title,
           password: amount,
@@ -45,6 +46,7 @@ function App() {
 
       alert("Login successful!");
     } catch (err) {
+      console.log(err.response);
       alert("Invalid credentials");
     }
   };
@@ -149,7 +151,7 @@ function App() {
     );
   }
 
-  // 🔥 MAIN DASHBOARD
+  // 🔥 DASHBOARD
   return (
     <div className="container">
       <h1>💰 Expense Dashboard</h1>
@@ -158,7 +160,6 @@ function App() {
         Logout
       </button>
 
-      {/* ADD EXPENSE */}
       <div className="card">
         <h3>Add Expense</h3>
 
@@ -185,7 +186,6 @@ function App() {
         </button>
       </div>
 
-      {/* EXPENSE LIST */}
       <div className="card">
         <h3>Expenses</h3>
 
@@ -199,17 +199,8 @@ function App() {
               </span>
 
               <div>
-                <button
-                  className="edit-btn"
-                  onClick={() => handleEdit(exp)}
-                >
-                  Edit
-                </button>
-
-                <button
-                  className="delete-btn"
-                  onClick={() => handleDelete(exp.id)}
-                >
+                <button onClick={() => handleEdit(exp)}>Edit</button>
+                <button onClick={() => handleDelete(exp.id)}>
                   Delete
                 </button>
               </div>
